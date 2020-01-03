@@ -18,7 +18,7 @@ import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 
 import javax.sql.DataSource;
 
@@ -42,7 +42,7 @@ public class BatchConfig {
         // 读取文件
         FlatFileItemReader<Person> itemReader = new FlatFileItemReader<>();
         // 设置文件路径
-        itemReader.setResource(new ClassPathResource("person-data.csv"));
+        itemReader.setResource(new FileSystemResource("E:\\src\\springcloud-learning\\spring-batch\\src\\main\\resources\\person-data.csv"));
 
         // 数据和领域模型类做对应映射
         DefaultLineMapper<Person> lineMapper = new DefaultLineMapper<>();
