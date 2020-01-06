@@ -25,10 +25,10 @@ public class PersonItemProcessor implements ItemProcessor<Person, Person> {
 
         final String firstName = person.getFirstName().toUpperCase();
         final String lastName = person.getLastName().toUpperCase();
-        if (firstName.equals("Obama") && lastName.equals("Barack")) {
-            Thread.sleep(10000);
+        /*if (firstName.equals("OBAMA") && lastName.equals("BARACK")) {
+            Thread.sleep(2000);
             int x = 1/0;
-        }
+        }*/
         final Person transformedPerson = new Person();
         transformedPerson.setFirstName(firstName);
         transformedPerson.setLastName(lastName);
