@@ -10,10 +10,10 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-//@Configuration
-//@EnableBatchProcessing
+@Configuration
 public class JobConfiguration {
     @Autowired
     private JobBuilderFactory jobBuilderFactory;
@@ -23,13 +23,13 @@ public class JobConfiguration {
     @Primary
     @Bean
     public Job helloWord() {
-        return jobBuilderFactory.get("helloWordJob").start(step1()).build();
+        return jobBuilderFactory.get("helloWordJob").start(helloWorldStep()).build();
 
     }
 
     @Bean
-    public Step step1() {
-        return stepBuilderFactory.get("step1").tasklet(new Tasklet() {
+    public Step helloWorldStep() {
+        return stepBuilderFactory.get("helloWorldStep").tasklet(new Tasklet() {
 
             @Override
             public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {

@@ -4,9 +4,13 @@ import com.springcloud.learning.springbatch.entity.Person;
 import com.springcloud.learning.springbatch.listener.JobCompletionNotificationListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.annotation.AfterChunk;
+import org.springframework.batch.core.annotation.BeforeChunk;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
@@ -15,18 +19,18 @@ import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 
 import javax.sql.DataSource;
 
-//@Configuration
-//@EnableBatchProcessing
+@Configuration
 public class BatchConfig {
 
     @Autowired
     private JobBuilderFactory jobBuilderFactory;
-
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
 
@@ -74,7 +78,8 @@ public class BatchConfig {
      * @return: org.springframework.batch.item.database.JdbcBatchItemWriter<com.springboot.springbatch.entity.Person>
      **/
     @Bean
-    public JdbcBatchItemWriter<Person> writer(DataSource dataSource) {
+    @StepScope//配合JobParameters使用,注入Job参数
+    public JdbcBatchItemWriter<Person> writer(DataSource dataSource, @Value("#{jobParameters['date']}") long date, @Value("#{jobParameters['name']}") String name) {
         // 写入到数据库
         JdbcBatchItemWriter<Person> itemWriter = new JdbcBatchItemWriterBuilder<Person>()
                 .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<Person>())
@@ -86,15 +91,15 @@ public class BatchConfig {
 
     /**
      * @desc: 定义作业。作业是根据步骤构建的。
-     * @param: [listener, step1]
+     * @param: [listener, importUserStep1]
      * @return: org.springframework.batch.core.Job
      **/
     @Bean
-    public Job importUserJob(JobCompletionNotificationListener listener, Step step1) {
+    public Job importUserJob(JobCompletionNotificationListener listener, Step importUserStep1) {
         return jobBuilderFactory.get("importUserJob")
                 .incrementer(new RunIdIncrementer())
                 .listener(listener)
-                .flow(step1)
+                .flow(importUserStep1)
                 .end()
                 .build();
     }
@@ -105,15 +110,30 @@ public class BatchConfig {
      * @return: org.springframework.batch.core.Step
      **/
     @Bean
-    public Step step1(JdbcBatchItemWriter<Person> itemWriter) {
+    public Step importUserStep1(JdbcBatchItemWriter<Person> itemWriter) {
 
         //定义一次写入数据量,此处是10条
         //chunk()前辍<Person, Person>表示输入和输出类型,并与ItemReader <Person>和ItemWriter <Person>对齐
         //在使用之前注入 ItemReader、ItemProcessor 和 ItemWriter
-        return stepBuilderFactory.get("step1").<Person, Person>chunk(10000)
+        return stepBuilderFactory.get("importUserStep1").<Person, Person>chunk(996)
+                .listener(new MyChunkListener())
                 .reader(reader())
                 .processor(processor())
                 .writer(itemWriter)
                 .build();
+    }
+
+    /**Chunk监听器*/
+    public class MyChunkListener {
+        int count = 0;
+        @BeforeChunk
+        public void beforeChunk(ChunkContext context) {
+            System.out.println(context.getStepContext().getStepName() + "chunk before running....." + ++count);
+        }
+
+        @AfterChunk
+        public void afterChunk(ChunkContext context) {
+            System.out.println(context.getStepContext().getStepName() + "chunk after running....." + count);
+        }
     }
 }
