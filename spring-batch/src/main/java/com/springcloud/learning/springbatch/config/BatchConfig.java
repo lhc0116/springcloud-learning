@@ -115,7 +115,7 @@ public class BatchConfig {
         //定义一次写入数据量,此处是10条
         //chunk()前辍<Person, Person>表示输入和输出类型,并与ItemReader <Person>和ItemWriter <Person>对齐
         //在使用之前注入 ItemReader、ItemProcessor 和 ItemWriter
-        return stepBuilderFactory.get("importUserStep1").<Person, Person>chunk(996)
+        return stepBuilderFactory.get("importUserStep1").<Person, Person>chunk(6)
                 .listener(new MyChunkListener())
                 .reader(reader())
                 .processor(processor())
